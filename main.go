@@ -79,10 +79,12 @@ func (tree *BST) find(val int) *bstNode {
 		return nil
 	}
 
-	return tree.findNode(val, tree.root)
+	// return tree.findNode(val, tree.root)
+	return tree.root.findNode(val)
 }
 
-func (tree *BST) findNode(val int, node *bstNode) *bstNode {
+// func (tree *BST) findNode(val int, node *bstNode) *bstNode {
+func (node *bstNode) findNode(val int) *bstNode {
 	if node == nil {
 		return nil
 	}
@@ -93,31 +95,24 @@ func (tree *BST) findNode(val int, node *bstNode) *bstNode {
 	}
 
 	if val > node.value {
-		return tree.findNode(val, node.right)
+		return node.right.findNode(val)
 	}
 
-	return tree.findNode(val, node.left)
+	return node.left.findNode(val)
 }
 
 func (tree *BST) remove(val int) {
 	if tree.root != nil {
-		// tree.root = tree.removeValue(tree.root, val)
 		tree.root = tree.root.removeValue(val)
 	}
 }
 
-// TODO
-// "update removeValue to be method on bstNode"
-// removeValue to removeValue
-// make it a method on node and not tree
-// pull out else into deleteNode
-// func (tree *BST) removeValue(node *bstNode, val int) *bstNode {
 func (node *bstNode) removeValue(val int) *bstNode {
 	if val < node.value {
 		node.left = node.left.removeValue(val)
 		return node
 	} else if val > node.value {
-		node.right = node.left.removeValue(val)
+		node.right = node.right.removeValue(val)
 		return node
 	}
 
