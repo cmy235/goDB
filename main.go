@@ -16,17 +16,13 @@ type BST struct {
 func main() {
 	myTree := BST{root: nil}
 
-	newNode := makeNode(14)
-	myTree.add(&newNode)
-	secondNode := makeNode(27)
-	myTree.add(&secondNode)
+	myTree.addValue(14)
+	myTree.printTreeOut()
+	myTree.addValue(27)
 
-	fmt.Println(newNode.value)
-	fmt.Println(newNode.left)
-	fmt.Println(newNode.right)
+	myTree.printTreeOut()
 	myTree.remove(27)
-	fmt.Println(newNode.left)
-	fmt.Println(newNode.right)
+	myTree.printTreeOut()
 
 	fmt.Println("Looking for 14 =>")
 	myTree.find(14)
@@ -34,16 +30,24 @@ func main() {
 	myTree.find(27)
 }
 
-func (tree *BST) add(node *bstNode) {
+func (tree *BST) printTreeOut() {
+	fmt.Println(tree.root)
+	fmt.Println(tree.root.left)
+	fmt.Println(tree.root.right)
+}
+
+func (tree *BST) addValue(val int) {
+	node := makeNode(val)
+
 	if tree.root == nil {
 		tree.root = node
 		fmt.Printf("Added %v as root \n", node.value)
 	} else {
-		tree.insertNode(tree.root, node)
+		tree.root.insertNode(node)
 	}
 }
 
-func (tree *BST) insertNode(node, nodeToAdd *bstNode) {
+func (node *bstNode) insertNode(nodeToAdd *bstNode) {
 	if node.value == nodeToAdd.value {
 		return
 	}
@@ -54,23 +58,22 @@ func (tree *BST) insertNode(node, nodeToAdd *bstNode) {
 			fmt.Printf("Added %v to tree", nodeToAdd.value)
 		} else {
 			// look recursively down left side until we find nil
-			tree.insertNode(node.left, nodeToAdd)
+			node.left.insertNode(nodeToAdd)
 		}
 	} else {
 		if node.right == nil {
-			// set the node child
 			node.right = nodeToAdd
 			fmt.Printf("Added %v to tree\n", nodeToAdd.value)
 		} else {
-			// look recursively down right
-			tree.insertNode(node.right, nodeToAdd)
+			// look down right
+			node.right.insertNode(nodeToAdd)
 		}
 	}
 }
 
-func makeNode(val int) bstNode {
+func makeNode(val int) *bstNode {
 	node := bstNode{value: val, left: nil, right: nil}
-	return node
+	return &node
 }
 
 // find and return the node in BST with this val
@@ -79,11 +82,9 @@ func (tree *BST) find(val int) *bstNode {
 		return nil
 	}
 
-	// return tree.findNode(val, tree.root)
 	return tree.root.findNode(val)
 }
 
-// func (tree *BST) findNode(val int, node *bstNode) *bstNode {
 func (node *bstNode) findNode(val int) *bstNode {
 	if node == nil {
 		return nil
