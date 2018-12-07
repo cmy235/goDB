@@ -1,9 +1,13 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/cmy235/goDB/bst"
+)
 
 func main() {
-	myTree := BST{root: nil}
+	myTree := bst.Tree{root: nil}
 
 	myTree.addValue(14)
 	myTree.printTreeOut()

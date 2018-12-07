@@ -2,35 +2,35 @@ package bst
 
 import (
 	"fmt"
-
-	"github.com/cmy235/goDB/node"
+	"goDB/node"
 )
 
+// Tree is a binary search tree
 type Tree struct {
-	root *node.bstNode
+	root *node.BstNode
 }
 
-func (tree *BST) addValue(val int) {
-	node := bstNode{value: val, left: nil, right: nil}
+func (tree *Tree) addValue(val int) {
+	node := &node.BstNode{Value: val, Left: nil, Right: nil}
 
 	if tree.root == nil {
 		tree.root = node
-		fmt.Printf("Added %v as root \n", node.value)
+		fmt.Printf("Added %v as root \n", node.Value)
 	} else {
-		tree.root.insertNode(node)
+		tree.root.InsertNode(node)
 	}
 }
 
 // find and return the node in BST with this val
-func (tree *BST) find(val int) *bstNode {
+func (tree *Tree) find(val int) *node.BstNode {
 	if tree.root == nil {
 		return nil
 	}
-	return tree.root.findNode(val)
+	return tree.root.FindNode(val)
 }
 
-func (tree *BST) remove(val int) {
+func (tree *Tree) remove(val int) {
 	if tree.root != nil {
-		tree.root = tree.root.removeValue(val)
+		tree.root = tree.root.RemoveValue(val)
 	}
 }

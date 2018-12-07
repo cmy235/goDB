@@ -1,90 +1,93 @@
-package Node
+package node
 
 import "fmt"
 
-type bstNode struct {
-	value int
-	left  *bstNode
-	right *bstNode
+// BstNode binary search tree node
+type BstNode struct {
+	Value int
+	Left  *BstNode
+	Right *BstNode
 }
 
-func (node *bstNode) insertNode(nodeToAdd *bstNode) {
-	if node.value == nodeToAdd.value {
+// InsertNode inserts node into place from receiver node
+func (node *BstNode) InsertNode(nodeToAdd *BstNode) {
+	if node.Value == nodeToAdd.Value {
 		return
 	}
 
-	if node.value > nodeToAdd.value {
-		if node.left == nil {
-			node.left = nodeToAdd
-			fmt.Printf("Added %v to tree", nodeToAdd.value)
+	if node.Value > nodeToAdd.Value {
+		if node.Left == nil {
+			node.Left = nodeToAdd
+			fmt.Printf("Added %v to tree", nodeToAdd.Value)
 		} else {
-			// look recursively down left side until we find nil
-			node.left.insertNode(nodeToAdd)
+			// look recursively down Left side until we find nil
+			node.Left.InsertNode(nodeToAdd)
 		}
 	} else {
-		if node.right == nil {
-			node.right = nodeToAdd
-			fmt.Printf("Added %v to tree\n", nodeToAdd.value)
+		if node.Right == nil {
+			node.Right = nodeToAdd
+			fmt.Printf("Added %v to tree\n", nodeToAdd.Value)
 		} else {
-			// look down right
-			node.right.insertNode(nodeToAdd)
+			// look down Right
+			node.Right.InsertNode(nodeToAdd)
 		}
 	}
 }
 
-func (node *bstNode) findNode(val int) *bstNode {
+// FindNode finds node with passed value starting from receiver node
+func (node *BstNode) FindNode(val int) *BstNode {
 	if node == nil {
 		return nil
 	}
 
-	if node.value == val {
-		fmt.Printf("Found node: %v \n", node.value)
+	if node.Value == val {
+		fmt.Printf("Found node: %v \n", node.Value)
 		return node
 	}
 
-	if val > node.value {
-		return node.right.findNode(val)
+	if val > node.Value {
+		return node.Right.FindNode(val)
 	}
 
-	return node.left.findNode(val)
+	return node.Left.FindNode(val)
 }
 
-func (node *bstNode) removeValue(val int) *bstNode {
-	if val < node.value {
-		node.left = node.left.removeValue(val)
+func (node *BstNode) RemoveValue(val int) *BstNode {
+	if val < node.Value {
+		node.Left = node.Left.RemoveValue(val)
 		return node
-	} else if val > node.value {
-		node.right = node.right.removeValue(val)
+	} else if val > node.Value {
+		node.Right = node.Right.RemoveValue(val)
 		return node
 	}
 
 	return node.deleteNode()
 }
 
-func (node *bstNode) deleteNode() *bstNode {
-	fmt.Printf("Removed %v from tree \n", node.value)
-	if node.left == nil && node.right == nil {
+func (node *BstNode) deleteNode() *BstNode {
+	fmt.Printf("Removed %v from tree \n", node.Value)
+	if node.Left == nil && node.Right == nil {
 		// no children
 		return nil
-	} else if node.left == nil {
+	} else if node.Left == nil {
 		// one child
-		return node.right
-	} else if node.right == nil {
-		return node.left
-	} else if node.right != nil && node.left != nil {
+		return node.Right
+	} else if node.Right == nil {
+		return node.Left
+	} else if node.Right != nil && node.Left != nil {
 		// two children
-		min := node.right.findMinNode()
-		node.value = min.value
-		node.right = node.right.removeValue(min.value)
+		min := node.Right.findMinNode()
+		node.Value = min.Value
+		node.Right = node.Right.RemoveValue(min.Value)
 		return node
 	}
 	return nil
 }
 
-// find minimum value beginning at given node
-func (node *bstNode) findMinNode() *bstNode {
-	if node.left == nil {
+// find minimum Value beginning at given node
+func (node *BstNode) findMinNode() *BstNode {
+	if node.Left == nil {
 		return node
 	}
-	return node.left.findMinNode()
+	return node.Left.findMinNode()
 }
