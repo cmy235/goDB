@@ -21,8 +21,17 @@ func main() {
 	secondNode := makeNode(27)
 	myTree.add(&secondNode)
 
+	fmt.Println(newNode.value)
+	fmt.Println(newNode.left)
+	fmt.Println(newNode.right)
 	myTree.remove(27)
+	fmt.Println(newNode.left)
+	fmt.Println(newNode.right)
+
+	fmt.Println("Looking for 14 =>")
 	myTree.find(14)
+	fmt.Println("Looking for 27 =>")
+	myTree.find(27)
 }
 
 func (tree *BST) add(node *bstNode) {
@@ -92,47 +101,55 @@ func (tree *BST) findNode(val int, node *bstNode) *bstNode {
 
 func (tree *BST) remove(val int) {
 	if tree.root != nil {
-		tree.root = tree.removeNode(tree.root, val)
+		// tree.root = tree.removeValue(tree.root, val)
+		tree.root = tree.root.removeValue(val)
 	}
 }
 
-func (tree *BST) removeNode(node *bstNode, val int) *bstNode {
+// TODO
+// "update removeValue to be method on bstNode"
+// removeValue to removeValue
+// make it a method on node and not tree
+// pull out else into deleteNode
+// func (tree *BST) removeValue(node *bstNode, val int) *bstNode {
+func (node *bstNode) removeValue(val int) *bstNode {
 	if val < node.value {
-		node.left = tree.removeNode(node.left, val)
+		node.left = node.left.removeValue(val)
 		return node
 	} else if val > node.value {
-		node.right = tree.removeNode(node.right, val)
+		node.right = node.left.removeValue(val)
 		return node
-	} else {
-		// ! found !
-		fmt.Printf("Removed %v from tree \n", node.value)
-		// no children
-		if node.left == nil && node.right == nil {
-			return nil
-		} else if node.left == nil { // one child
-			return node.right
-		} else if node.right == nil {
-			return node.left
-		} else if node.right != nil && node.left != nil { // two children
-			// need inorder successor of node we're deleting
-			min := tree.findMinNode(node.right)
-			node.value = min.value
-			// update current node to refleact that node's data
-			// remove original min node since it was promoted
-			node.right = tree.removeNode(node.right, min.value)
-			return node
-		} else {
-			return nil
-		}
 	}
+
+	return node.deleteNode()
 }
 
-// find minimum value in tree beginning at given node
-func (tree *BST) findMinNode(node *bstNode) bstNode {
-	if node.left == nil {
-		return *node
+func (node *bstNode) deleteNode() *bstNode {
+	fmt.Printf("Removed %v from tree \n", node.value)
+	if node.left == nil && node.right == nil {
+		// no children
+		return nil
+	} else if node.left == nil {
+		// one child
+		return node.right
+	} else if node.right == nil {
+		return node.left
+	} else if node.right != nil && node.left != nil {
+		// two children
+		min := node.right.findMinNode()
+		node.value = min.value
+		node.right = node.right.removeValue(min.value)
+		return node
 	}
-	return tree.findMinNode(node.left)
+	return nil
+}
+
+// find minimum value beginning at given node
+func (node *bstNode) findMinNode() *bstNode {
+	if node.left == nil {
+		return node
+	}
+	return node.left.findMinNode()
 }
 
 func swap(a, b *int) {
