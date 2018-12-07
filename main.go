@@ -2,23 +2,19 @@ package main
 
 import (
 	"fmt"
-
-	"github.com/cmy235/goDB/bst"
+	"goDB/bst"
 )
 
 func main() {
-	myTree := bst.Tree{root: nil}
+	myTree := bst.Tree{Root: nil}
 
-	myTree.addValue(14)
-	myTree.printTreeOut()
-	myTree.addValue(27)
+	myTree.AddValue(14)
+	myTree.AddValue(27)
 
-	myTree.printTreeOut()
-	myTree.remove(27)
-	myTree.printTreeOut()
+	myTree.Remove(27)
 
 	fmt.Println("Looking for 14 =>")
-	myTree.find(14)
+	myTree.Find(14)
 	fmt.Println("Looking for 27 =>")
-	myTree.find(27)
+	myTree.Find(27)
 }
