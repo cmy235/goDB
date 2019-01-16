@@ -56,6 +56,7 @@ func (tree *Bplustree) splitAndInsert(leaf *Node, key int) {
 		IsLeaf:   true,
 	}
 
+	// TODO
 	// pointer issues here?
 	j := 0
 	for idx := mid; idx < tree.Order; idx++ {
@@ -80,23 +81,57 @@ func (tree *Bplustree) splitAndInsert(leaf *Node, key int) {
 }
 
 func (tree *Bplustree) promoteKeyToParent(key int, left, right *Node) error {
+	idxToInsert := findIdxToInsert(left.Parent, left)
+
 	// cases
 	// 1 there is no parent of left, right => makeNewRoot
 	if left.Parent == nil {
 		return tree.makeNewRootAndInsert(key, left, right)
 	}
 
-	// 2 there is a parent, and the parents keys are < the order - 1 limit  => insert into node
+	// TODO are these returns correct?
+
+	// 2 there is a parent, and the parents keys are < the order - 1 limit  => so insert into node
 	if left.Parent.KeyCount+1 < tree.Order-1 {
-		insertValueToLeaf(left.Parent, key)
+		// insertValueToNode(left.Parent, key)
+		insertValueToNode(left.Parent, idxToInsert, key, right)
+		return nil
 	}
 
-	// 3 there is a parent, and the parents keys are now >= the order - 1 limit => split the parent and then insert key into one of the new parents
-	tree.splitAndInsertIntoNode(key, left, right)
+	// 3 there is a parent, and the parents keys are now >= the order - 1 limit =>
+	// so take the already splitted nodes, and their key
+	//
+	// insert key into one of the new parents
+	// ?? should this just be insertValueToNode
+	tree.splitAndInsertIntoNode(key, idxToInsert, left, right)
 	return nil
 }
 
-func (tree *Bplustree) splitAndInsertIntoNode(key int, left, right *Node) error {
+// TODO need to know which node to insert it into on the parent
+func insertValueToNode(parent *Node, idxToInsert, key int, right *Node) {
+	// go through parent keys
+	// re assign them to one index ahead of where they are
+	// then add key in at idxToInsert
+
+	for j := parent.KeyCount; j > idxToInsert; j++ {
+		parent.Pointers[j+1] = parent.Pointers[j]
+		parent.Keys[j] = parent.Keys[j-1]
+	}
+
+	parent.Keys[idxToInsert+1] = key
+	parent.Pointers[idxToInsert] = right
+}
+
+func findIdxToInsert(parent, left *Node) int {
+	leftIdx := 0
+	for leftIdx < parent.KeyCount && left != parent.Pointers[leftIdx] {
+		leftIdx++
+	}
+
+	return leftIdx
+}
+
+func (tree *Bplustree) splitAndInsertIntoNode(key, idxToInsert int, left, right *Node) error {
 	// TODO
 	// do the steps for splitting and inserting at leaf
 	// also ensure parent node points to left, right
