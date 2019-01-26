@@ -34,19 +34,22 @@ func (tree *Bplustree) Insert(key int) {
 	if tree.Root == nil {
 		tree.makeRoot(key)
 	}
-	// find the leaf at this key we want to add to
+	// find the leaf node - the one where we want to add the key into
 	leaf := tree.findLeaf(key)
 
 	if leaf.KeyCount < (tree.Order - 1) {
 		insertValueToLeaf(leaf, key)
 	} else {
 		// we hit our max, split the node, insert the key
-		tree.splitAndInsert(leaf, key)
+		tree.splitAndInsertIntoLeaf(leaf, key)
 	}
 }
 
-func (tree *Bplustree) splitAndInsert(leaf *Node, key int) {
-	insertValueToLeaf(leaf, key)
+func (tree *Bplustree) splitAndInsertIntoLeaf(leaf *Node, key int) {
+	// split this leaf into two
+	// => make sure two new leaves both have correct parents
+	// => split in half if even, or give left +1 if they're odd
+	// => in all cases add key into new right
 
 	mid := getMid(tree.Order)
 
@@ -56,19 +59,22 @@ func (tree *Bplustree) splitAndInsert(leaf *Node, key int) {
 		IsLeaf:   true,
 	}
 
-	// TODO
-	// pointer issues here?
 	j := 0
+	// start idx at midpoint
+	// go from midpoint..full
+	// here we're taking the second half of the original leaf => insert it into first half of new Leaf
 	for idx := mid; idx < tree.Order; idx++ {
 		newLeaf.Keys[j] = leaf.Keys[idx]
 		newLeaf.Pointers[j] = leaf.Pointers[idx]
 		j++
 	}
 
+	// now we take the first half of the original leaves/pointers and compy them into new leaves/pointers
 	newKeys := make([]int, mid)
 	newPointers := make([]*Node, mid)
 	copy(newKeys, leaf.Keys)
 	copy(newPointers, leaf.Pointers)
+	// now reset the keys/pointers
 	leaf.Keys = newKeys
 	leaf.Pointers = newPointers
 	leaf.KeyCount = mid - 1
@@ -81,6 +87,7 @@ func (tree *Bplustree) splitAndInsert(leaf *Node, key int) {
 }
 
 func (tree *Bplustree) promoteKeyToParent(key int, left, right *Node) error {
+
 	idxToInsert := findIdxToInsert(left.Parent, left)
 
 	// cases
@@ -89,41 +96,43 @@ func (tree *Bplustree) promoteKeyToParent(key int, left, right *Node) error {
 		return tree.makeNewRootAndInsert(key, left, right)
 	}
 
-	// TODO are these returns correct?
-
-	// 2 there is a parent, and the parents keys are < the order - 1 limit  => so insert into node
+	// 2 there is a parent, and the parents keys are < the order - 1 limit  => so insert key into right node
+	// and make sure that the parent also has access to right, so it can set its Pointers to right
 	if left.Parent.KeyCount+1 < tree.Order-1 {
-		// insertValueToNode(left.Parent, key)
 		insertValueToNode(left.Parent, idxToInsert, key, right)
 		return nil
 	}
 
 	// 3 there is a parent, and the parents keys are now >= the order - 1 limit =>
-	// so take the already splitted nodes, and their key
-	//
-	// insert key into one of the new parents
-	// ?? should this just be insertValueToNode
-	tree.splitAndInsertIntoNode(key, idxToInsert, left, right)
+	// so now we can't just add it into the parent
+	// => we have to split the parent up in half
+	// => make sure each half maintains proper parents
+	// => make sure one of the halves has the new key in it
+	tree.splitAndInsertIntoNode(left.Parent, idxToInsert, key, right)
 	return nil
 }
 
-// TODO need to know which node to insert it into on the parent
 func insertValueToNode(parent *Node, idxToInsert, key int, right *Node) {
 	// go through parent keys
 	// re assign them to one index ahead of where they are
 	// then add key in at idxToInsert
 
-	for j := parent.KeyCount; j > idxToInsert; j++ {
+	for j := parent.KeyCount; j > idxToInsert; j-- {
 		parent.Pointers[j+1] = parent.Pointers[j]
 		parent.Keys[j] = parent.Keys[j-1]
 	}
 
 	parent.Keys[idxToInsert+1] = key
 	parent.Pointers[idxToInsert] = right
+	// parent now has one more key
+	parent.KeyCount++
 }
 
 func findIdxToInsert(parent, left *Node) int {
 	leftIdx := 0
+	// while idx is less than the total keys available && left node is not equal to the parent's child
+	// (basically going along until we find the idx right BEFORE the left node)
+
 	for leftIdx < parent.KeyCount && left != parent.Pointers[leftIdx] {
 		leftIdx++
 	}
@@ -131,11 +140,61 @@ func findIdxToInsert(parent, left *Node) int {
 	return leftIdx
 }
 
-func (tree *Bplustree) splitAndInsertIntoNode(key, idxToInsert int, left, right *Node) error {
-	// TODO
-	// do the steps for splitting and inserting at leaf
-	// also ensure parent node points to left, right
-	// split left.Parent into two
+func (tree *Bplustree) splitAndInsertIntoNode(old *Node, idxToInsert, key int, right *Node) error {
+	// split up the old node by (1) making two brand new nodes from the old
+	// (2) ensure that both new children nodes have old's parent
+	// (3) insert key & add Node to pointers
+	// (4) make sure that each new node now has the appropriate new Pointers
+	var r bool
+
+	newLeftNode := &Node{}
+	newLeftNode.Parent = old.Parent
+
+	newRightNode := &Node{}
+	newRightNode.Parent = old.Parent
+
+	halfway := getMid(tree.Order)
+
+	leftHalfway := halfway
+	rightHalfway := halfway
+
+	if idxToInsert >= halfway {
+		newRightNode.Pointers = append(newRightNode.Pointers, nil)
+		rightHalfway++
+		r = true
+	} else {
+		newLeftNode.Pointers = append(newLeftNode.Pointers, nil)
+		leftHalfway++
+	}
+
+	newLeftNode.Pointers = make([]*Node, leftHalfway)
+	newLeftNode.Keys = make([]int, leftHalfway)
+
+	// take first half of keys & pointesrs from old
+	copy(newLeftNode.Pointers, old.Pointers)
+	copy(newLeftNode.Keys, old.Keys)
+
+	startIdx := halfway
+	stopIdx := tree.Order
+
+	if r == true {
+		stopIdx++
+		halfway++
+		newRightNode.Pointers[idxToInsert+1] = right
+		newRightNode.Keys[idxToInsert] = key
+	} else {
+		newLeftNode.Pointers[idxToInsert+1] = right
+		newLeftNode.Keys[idxToInsert] = key
+	}
+
+	// fill in rest of right
+	for i := startIdx; i < stopIdx; i++ {
+		newRightNode.Pointers[i] = old.Pointers[i]
+		newRightNode.Keys[i] = old.Keys[i]
+	}
+
+	tree.promoteKeyToParent(key, newLeftNode, newRightNode)
+
 	return nil
 }
 
@@ -175,10 +234,14 @@ func (tree *Bplustree) findLeaf(key int) *Node {
 	// while the currentnode is NOT a leaf
 	for !currentNode.IsLeaf {
 		i = 0
+		// for all of this node's keys
 		for i < currentNode.KeyCount {
+			// check if the current key we're on is greater than the one we're looking for
 			if key >= currentNode.Keys[i] {
+				// if so, keep going (increasing) in keys and looking for the NEXT one greater than our key
 				i++
 			} else {
+				// otherwise break, and we'll re-set the currentNode with this index
 				break
 			}
 		}
@@ -196,7 +259,7 @@ func insertValueToLeaf(leaf *Node, key int) {
 
 	// reset all of the keys GREATER than the idx where you're adding
 	leaf.Keys = append(leaf.Keys, 0)
-	copy(leaf.Keys[idx+1:], leaf.Keys[idx:])
+	copy(leaf.Keys[idx+1:], leaf.Keys[idx:]) // destination, source
 	leaf.Keys[idx] = key
 	leaf.KeyCount++
 }
@@ -214,3 +277,7 @@ func (tree *Bplustree) makeRoot(key int) {
 // notes
 // check if key already exists/duplicates in tree
 // don't worry about making a linked list at the bottom of leaf nodes
+
+// TODO
+// returns ok in promoteToParent?
+// insertValueToNode redo using copy
